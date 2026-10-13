@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>spamfilter</title>
+<style>
+  :root { --bg:#0f1115; --fg:#e6e6e6; --muted:#8a8f98; --card:#181b22; --spam:#e5484d; --ham:#30a46c; --accent:#4f8cff; }
+  @media (prefers-color-scheme: light) { :root { --bg:#f7f7f8; --fg:#111; --muted:#666; --card:#fff; } }
+  body { margin:0; background:var(--bg); color:var(--fg); font:16px/1.5 system-ui, sans-serif; }
+  main { max-width:640px; margin:0 auto; padding:40px 16px; }
+  h1 { font-size:22px; margin:0 0 4px; }
+  p.sub { color:var(--muted); margin:0 0 24px; }
+  textarea { width:100%; box-sizing:border-box; min-height:110px; padding:12px; border-radius:8px; border:1px solid #333; background:var(--card); color:var(--fg); font:inherit; resize:vertical; }
+  button { margin-top:10px; padding:10px 18px; border:0; border-radius:8px; background:var(--accent); color:#fff; font:inherit; cursor:pointer; }
+  button:disabled { opacity:.5; }
+  .result { margin-top:24px; padding:16px; background:var(--card); border-radius:10px; display:none; }
+  .label { font-size:28px; font-weight:700; }
+  .label.spam { color:var(--spam); } .label.ham { color:var(--ham); }
+  .bar { height:8px; background:#333; border-radius:4px; overflow:hidden; margin:10px 0 16px; }
+  .bar > div { height:100%; background:var(--spam); width:0; transition:width .3s; }
+  table { width:100%; border-collapse:collapse; font-size:14px; }
+  td { padding:4px 0; border-top:1px solid #2a2d35; }
+  td:last-child { text-align:right; font-variant-numeric:tabular-nums; }
+  .pos { color:var(--spam); } .neg { color:var(--ham); }
+  .samples { margin-top:16px; display:flex; gap:8px; flex-wrap:wrap; }
+  .samples button { background:transparent; border:1px solid #444; color:var(--muted); padding:6px 10px; font-size:13px; margin:0; }
+  .err { color:var(--spam); margin-top:10px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>spamfilter</h1>
+  <p class="sub">Naive Bayes written from scratch in Rust. Paste an SMS, see the verdict and which words drove it.</p>
+  <textarea id="t" placeholder="Type a message..."></textarea>
+  <button id="go">Classify</button>
+  <div class="samples">
+    <button data-s="WINNER!! You have been selected to receive a £900 prize reward! To claim call 09061701461. Claim code KL341.">spam sample</button>
+    <button data-s="Hey, are we still on for lunch tomorrow? I can do 12:30.">ham sample</button>
+  </div>
+  <div class="err" id="err"></div>
+  <div class="result" id="r">
+    <div class="label" id="lab"></div>
+    <div id="p" style="color:var(--muted)"></div>
+    <div class="bar"><div id="bar"></div></div>
+    <table id="ev"></table>
+  </div>
+</main>
+<script>
+const t = document.getElementById('t'), go = document.getElementById('go'), r = document.getElementById('r');
+const lab = document.getElementById('lab'), p = document.getElementById('p'), bar = document.getElementById('bar');
+const ev = document.getElementById('ev'), err = document.getElementById('err');
+document.querySelectorAll('.samples button').forEach(b => b.onclick = () => { t.value = b.dataset.s; run(); });
+go.onclick = run;
+async function run() {
+  err.textContent = ''; go.disabled = true;
+  try {
+    const res = await fetch('/predict', { method:'POST', headers:{'content-type':'application/json'}, body: JSON.stringify({ text: t.value }) });
+    if (!res.ok) { err.textContent = await res.text(); r.style.display = 'none'; return; }
+    const d = await res.json();
+    lab.textContent = d.label.toUpperCase(); lab.className = 'label ' + d.label;
+    p.textContent = 'P(spam) = ' + d.p_spam.toFixed(4);
+    bar.style.width = (d.p_spam * 100).toFixed(1) + '%';
+    ev.innerHTML = d.top_evidence.map(e => `<tr><td>${e.token.replace(/</g,'&lt;')}</td><td class="${e.log_odds > 0 ? 'pos' : 'neg'}">${e.log_odds > 0 ? '+' : ''}${e.log_odds.toFixed(2)}</td></tr>`).join('');
+    r.style.display = 'block';
+  } catch (e) { err.textContent = String(e); }
+  finally { go.disabled = false; }
+}
+</script>
+</body>
+</html>
