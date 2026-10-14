@@ -5,6 +5,8 @@ tokenizer tuned for text messages, a majority-class baseline, proper evaluation
 on a held-out split, a comparison against the `linfa` library implementation,
 and deployment as both a CLI and an Axum HTTP API with a small test page.
 
+**Live demo:** https://evannwilsonn.github.io/spamfilter/ (the trained model, embedded in a single HTML page and ported to JavaScript; scores on every keystroke, nothing leaves the browser).
+
 ![demo](docs/demo.png)
 
 On a stratified 80/20 split, averaged over ten random seeds, the shipped
@@ -130,6 +132,7 @@ Two surfaces, both backed by the same `model.json`:
 
 - **CLI**: `spamfilter predict "..."` prints the label, `p_spam`, and the top
   evidence tokens.
+- **Browser demo** (`docs/index.html`, served by GitHub Pages): the same `model.json` embedded in the page with the naive Bayes maths ported to JavaScript. Checked against the Rust CLI on sample messages, exact match to four decimals.
 - **HTTP API** (`src/serve.rs`, Axum): `POST /predict` with `{"text": "..."}`
   returns `{label, p_spam, top_evidence}`; `GET /health` reports vocab size and
   threshold; `GET /` serves a one-file test page. Empty text is a 400, text over
@@ -175,6 +178,7 @@ src/
   serve.rs      Axum router
   main.rs       CLI: eval | train | predict | serve
 static/index.html   test page served at /
+docs/index.html     standalone browser demo (GitHub Pages)
 data/SMSSpamCollection.tsv
 ```
 
