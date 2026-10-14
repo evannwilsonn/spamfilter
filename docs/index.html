@@ -4,129 +4,106 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Spamfilter Live</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap">
 <style>
-/* Theme: precise, blunt, instrument. Safe base (slate neutrals, 4px grid, one accent, mono data)
-   with neubrutalist chrome on the verdict, composer and primary controls only: 2px ink borders,
-   hard zero-blur offset shadows, square corners, oversized display type. Data rows stay quiet.
+/* Brutalist Raw: Space Mono end to end, slate paper, ink borders. One accent (yellow). Red is the spam verdict only.
+   Hard offset shadow appears on exactly two things: the verdict box and the primary button.
    Layout: thread left, reasoning right, measurement below; stacks at 800px. */
 :root {
-  /* Palette (OKLCH-derived, hue 250 neutrals) */
-  --bg: #F1F2F4;          /* neutral-5 */
-  --fg: #0B0D12;          /* neutral-100, also the brutalist ink */
-  --card: #FFFFFF;
-  --muted: #E2E5EA;       /* neutral-15 */
-  --muted-fg: #4F5868;    /* 6.6:1 on --bg */
-  --line: #C9CED6;        /* quiet borders for data rows */
-  --ink: #0B0D12;         /* brutalist borders + shadows */
-  --accent: #FFE600;      /* one pop, used only for the primary action */
-  --on-accent: #0B0D12;
-  --spam: #D7262F;        /* 5.2:1 on white */
-  --spam-soft: #FBE3E4;
-  --ham: #1B7F45;         /* 5.1:1 on white */
-  --ham-soft: #DDF2E5;
-  --ring: #0B0D12;
-  /* Type: Space Grotesk (display + UI), IBM Plex Mono (data). Hand-picked scale. */
-  --font-ui: "Space Grotesk", "Helvetica Neue", Arial, sans-serif;
-  --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
-  --t-xs: 12px; --t-sm: 13px; --t-base: 15px; --t-md: 17px; --t-lg: 22px; --t-xl: 30px; --t-2xl: clamp(40px, 6vw, 56px);
-  /* Space: 4px base */
+  --bg: #F1F2F4; --fg: #0B0D12; --card: #FAFAFB; --muted: #E2E5EA; --muted-fg: #4F5868; --line: #C9CED6;
+  --ink: #0B0D12; --accent: #FFE600; --on-accent: #0B0D12;
+  --spam: #D7262F; --spam-soft: #FBE3E4; --ham: #1B7F45; --ham-soft: #DDF2E5; --ring: #0B0D12;
+  --mono: "Space Mono", "Courier New", ui-monospace, monospace;
+  --t-xs: 12px; --t-sm: 13px; --t-base: 15px; --t-md: 17px; --t-lg: 22px; --t-xl: 32px; --t-2xl: clamp(40px, 6vw, 56px);
   --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s5: 20px; --s6: 24px; --s8: 32px;
-  --shadow-card: 5px 5px 0 0 var(--ink);
-  --shadow-btn: 3px 3px 0 0 var(--ink);
-  --shadow-hero: 8px 8px 0 0 var(--ink);
+  --shadow-hero: 8px 8px 0 0 var(--ink); --shadow-btn: 4px 4px 0 0 var(--ink);
   color-scheme: light;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     --bg: #0B0D12; --fg: #F1F2F4; --card: #151821; --muted: #20242F; --muted-fg: #A6AEBD; --line: #2E3442;
-    --ink: #F1F2F4; --accent: #FFE600; --on-accent: #0B0D12;
-    --spam: #FF6B6F; --spam-soft: #3A1A1D; --ham: #4ADE80; --ham-soft: #153224; --ring: #F1F2F4;
+    --ink: #F1F2F4; --spam: #FF6B6F; --spam-soft: #3A1A1D; --ham: #4ADE80; --ham-soft: #153224; --ring: #F1F2F4;
     color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
   --bg: #0B0D12; --fg: #F1F2F4; --card: #151821; --muted: #20242F; --muted-fg: #A6AEBD; --line: #2E3442;
-  --ink: #F1F2F4; --accent: #FFE600; --on-accent: #0B0D12;
-  --spam: #FF6B6F; --spam-soft: #3A1A1D; --ham: #4ADE80; --ham-soft: #153224; --ring: #F1F2F4;
+  --ink: #F1F2F4; --spam: #FF6B6F; --spam-soft: #3A1A1D; --ham: #4ADE80; --ham-soft: #153224; --ring: #F1F2F4;
   color-scheme: dark;
 }
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
-body { background: var(--bg); color: var(--fg); font-family: var(--font-ui); font-size: var(--t-base); line-height: 1.5; }
+body { background: var(--bg); color: var(--fg); font-family: var(--mono); font-size: var(--t-base); line-height: 1.5; }
 :focus-visible { outline: 3px solid var(--ring); outline-offset: 2px; }
+a { color: inherit; }
 .wrap { max-width: 1120px; margin: 0 auto; padding-block: var(--s6) var(--s8); padding-inline: var(--s4); }
 
-/* Header */
 .top { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: var(--s3) var(--s6); margin-bottom: var(--s6); }
-h1 { font-size: var(--t-xl); margin: 0; font-weight: 700; letter-spacing: -0.02em; line-height: 1; text-transform: uppercase; }
-.sub { margin: var(--s2) 0 0; font-size: var(--t-sm); color: var(--muted-fg); max-width: 56ch; }
-.facts { display: flex; flex-wrap: wrap; gap: var(--s2); font-family: var(--font-mono); font-size: var(--t-xs); }
-.facts span { padding: 5px 9px; border: 2px solid var(--ink); background: var(--card); color: var(--muted-fg); white-space: nowrap; }
-.facts b { color: var(--fg); font-weight: 600; }
+.repo { font-size: var(--t-sm); color: var(--muted-fg); margin: 0 0 var(--s3); }
+h1 { font-size: var(--t-xl); margin: 0; font-weight: 700; letter-spacing: -0.03em; line-height: 1; }
+h1::after { content: ""; display: block; width: 64px; height: 6px; background: var(--accent); margin-top: 10px; }
+.sub { margin: var(--s3) 0 0; font-size: var(--t-sm); color: var(--muted-fg); max-width: 60ch; }
+.facts { font-size: var(--t-sm); color: var(--muted-fg); line-height: 1.7; text-align: right; }
+.facts b { color: var(--fg); font-weight: 700; }
+@media (max-width: 800px) { .facts { text-align: left; } }
 
-/* Panels: brutalist frame, quiet inside */
 .grid { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: var(--s6); }
 @media (max-width: 800px) { .grid { grid-template-columns: 1fr; } }
-.panel { background: var(--card); border: 2px solid var(--ink); box-shadow: var(--shadow-card); min-width: 0; }
+.panel { background: var(--card); border: 2px solid var(--ink); min-width: 0; }
 .panel-head { display: flex; justify-content: space-between; align-items: center; padding: var(--s3) var(--s4); border-bottom: 2px solid var(--ink); font-size: var(--t-sm); color: var(--muted-fg); }
-.panel-head b { color: var(--fg); font-weight: 700; font-size: var(--t-sm); letter-spacing: .06em; text-transform: uppercase; }
+.panel-head b { color: var(--fg); font-weight: 700; }
 
-/* Thread */
 .thread { display: flex; flex-direction: column; height: 620px; }
 .msgs { flex: 1; overflow-y: auto; padding: var(--s4); display: flex; flex-direction: column; gap: var(--s3); }
 .msg { max-width: 90%; align-self: flex-start; }
 .msg button { all: unset; cursor: pointer; display: grid; gap: var(--s1); }
 .msg button:focus-visible { outline: 3px solid var(--ring); outline-offset: 3px; }
-.bubble { background: var(--muted); padding: var(--s2) var(--s3); border: 1px solid var(--line); overflow-wrap: anywhere; font-size: var(--t-base); }
+.bubble { background: var(--muted); padding: var(--s2) var(--s3); border: 1px solid var(--line); overflow-wrap: anywhere; }
 .msg button:hover .bubble { border-color: var(--ink); }
-.msg.active .bubble { border: 2px solid var(--ink); box-shadow: var(--shadow-btn); }
-.verdict { display: inline-flex; align-items: center; gap: 6px; font-family: var(--font-mono); font-size: var(--t-xs); font-weight: 600; padding: 3px 8px; border: 1px solid currentColor; width: max-content; text-transform: uppercase; letter-spacing: .04em; }
+.msg.active .bubble { border: 2px solid var(--ink); }
+.verdict { display: inline-flex; align-items: center; gap: 6px; font-size: var(--t-xs); font-weight: 700; padding: 3px 8px; border: 1px solid currentColor; width: max-content; }
 .verdict.spam { background: var(--spam-soft); color: var(--spam); }
 .verdict.ham { background: var(--ham-soft); color: var(--ham); }
 .verdict svg { width: 12px; height: 12px; }
 
-/* Composer: brutalist */
 .compose { border-top: 2px solid var(--ink); padding: var(--s3) var(--s4) var(--s4); display: grid; gap: var(--s2); }
-label.vis { font-size: var(--t-xs); color: var(--muted-fg); font-weight: 500; letter-spacing: .04em; text-transform: uppercase; }
-textarea { width: 100%; resize: none; min-height: 72px; padding: var(--s2) var(--s3); border: 2px solid var(--ink); background: var(--bg); color: var(--fg); font: inherit; font-size: var(--t-base); }
+label.vis { font-size: var(--t-sm); color: var(--muted-fg); }
+textarea { width: 100%; resize: none; min-height: 72px; padding: var(--s2) var(--s3); border: 2px solid var(--ink); background: var(--bg); color: var(--fg); font: inherit; }
 textarea:focus-visible { outline: 3px solid var(--ring); outline-offset: 2px; }
 .row { display: flex; gap: var(--s2); flex-wrap: wrap; align-items: center; }
-.btn { font: inherit; font-size: var(--t-sm); font-weight: 700; min-height: 44px; padding: 0 var(--s4); border: 2px solid var(--ink); background: var(--card); color: var(--fg); cursor: pointer; box-shadow: var(--shadow-btn); text-transform: uppercase; letter-spacing: .04em; transition: transform 100ms ease, box-shadow 100ms ease; }
-.btn.primary { background: var(--accent); color: var(--on-accent); }
-.btn:hover { transform: translate(-1px, -1px); box-shadow: 4px 4px 0 0 var(--ink); }
-.btn:active { transform: translate(3px, 3px); box-shadow: 0 0 0 0 var(--ink); }
+.btn { font: inherit; font-weight: 700; min-height: 44px; padding: 0 var(--s4); border: 2px solid var(--ink); background: var(--card); color: var(--fg); cursor: pointer; transition: transform 100ms ease, box-shadow 100ms ease, background-color 100ms ease; }
+.btn:hover { background: var(--muted); }
+.btn.primary { background: var(--accent); color: var(--on-accent); box-shadow: var(--shadow-btn); }
+.btn.primary:hover { background: var(--accent); transform: translate(-1px, -1px); box-shadow: 5px 5px 0 0 var(--ink); }
+.btn.primary:active { transform: translate(4px, 4px); box-shadow: 0 0 0 0 var(--ink); }
 .btn:focus-visible { outline: 3px solid var(--ring); outline-offset: 3px; }
-.live { margin-left: auto; font-family: var(--font-mono); font-size: var(--t-sm); color: var(--muted-fg); }
-.live b { font-weight: 600; text-transform: uppercase; }
+.live { margin-left: auto; font-size: var(--t-sm); color: var(--muted-fg); }
+.live b { font-weight: 700; }
 .live b.spam { color: var(--spam); } .live b.ham { color: var(--ham); }
 
-/* Reasoning */
 .why { padding: var(--s4); display: grid; gap: var(--s6); align-content: start; }
-h2 { font-family: var(--font-mono); font-size: var(--t-xs); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted-fg); margin: 0 0 var(--s2); font-weight: 600; }
+h2 { font-size: var(--t-base); color: var(--fg); margin: 0 0 var(--s2); font-weight: 700; }
 .hero { border: 2px solid var(--ink); box-shadow: var(--shadow-hero); padding: var(--s4); background: var(--bg); }
-.hero .label { font-size: var(--t-2xl); font-weight: 700; letter-spacing: -0.03em; line-height: .95; display: flex; align-items: center; gap: var(--s3); text-transform: uppercase; }
+.hero .label { font-size: var(--t-2xl); font-weight: 700; letter-spacing: -0.04em; line-height: .95; display: flex; align-items: center; gap: var(--s3); }
 .hero .label svg { width: .8em; height: .8em; flex: none; }
 .hero .label.spam { color: var(--spam); } .hero .label.ham { color: var(--ham); }
-.hero .p { font-family: var(--font-mono); font-size: var(--t-sm); color: var(--muted-fg); margin-top: var(--s2); }
+.hero .p { font-size: var(--t-sm); color: var(--muted-fg); margin-top: var(--s2); }
 .meter { position: relative; height: 14px; background: var(--muted); border: 2px solid var(--ink); margin-top: var(--s3); }
 .meter .fill { height: 100%; background: var(--spam); width: 0; transition: width 150ms ease; }
 .meter .thr { position: absolute; top: -8px; width: 3px; height: 26px; background: var(--ink); }
-.meter-lbl { display: flex; justify-content: space-between; font-family: var(--font-mono); font-size: var(--t-xs); color: var(--muted-fg); margin-top: 6px; }
+.meter-lbl { display: flex; justify-content: space-between; font-size: var(--t-xs); color: var(--muted-fg); margin-top: 6px; }
 
 .thr-row { display: grid; grid-template-columns: 1fr auto; gap: var(--s3); align-items: center; }
 .thr-row input { width: 100%; min-width: 0; accent-color: var(--ink); height: 44px; margin: 0; }
-.thr-row output { font-family: var(--font-mono); font-size: var(--t-md); font-weight: 600; min-width: 4ch; text-align: right; font-variant-numeric: tabular-nums; }
-.ticks { display: flex; justify-content: space-between; font-family: var(--font-mono); font-size: var(--t-xs); color: var(--muted-fg); }
+.thr-row output { font-size: var(--t-md); font-weight: 700; min-width: 4ch; text-align: right; font-variant-numeric: tabular-nums; }
+.ticks { display: flex; justify-content: space-between; font-size: var(--t-xs); color: var(--muted-fg); }
 .hint { margin: var(--s2) 0 0; font-size: var(--t-sm); color: var(--muted-fg); max-width: 60ch; }
 
-/* Evidence: quiet data rows */
-.ev-key { display: flex; justify-content: space-between; font-family: var(--font-mono); font-size: var(--t-xs); color: var(--muted-fg); margin-bottom: var(--s2); }
+.ev-key { display: flex; justify-content: space-between; font-size: var(--t-xs); color: var(--muted-fg); margin-bottom: var(--s2); }
 .ev-key span { display: inline-flex; align-items: center; gap: 6px; }
 .ev-key svg { width: 12px; height: 12px; }
-.ev { display: grid; font-family: var(--font-mono); font-size: var(--t-sm); }
-.ev-row { display: grid; grid-template-columns: minmax(0, 140px) 1fr 60px; align-items: center; gap: var(--s3); min-height: 28px; border-bottom: 1px solid var(--line); }
-.ev-row:last-child { border-bottom: 0; }
+.ev { display: grid; gap: var(--s2); font-size: var(--t-sm); }
+.ev-row { display: grid; grid-template-columns: minmax(0, 140px) 1fr 60px; align-items: center; gap: var(--s3); min-height: 24px; }
 .ev-row .tok { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ev-row .tok.oov { color: var(--muted-fg); text-decoration: line-through; }
 .ev-bar { position: relative; height: 12px; }
@@ -134,26 +111,26 @@ h2 { font-family: var(--font-mono); font-size: var(--t-xs); letter-spacing: 0.08
 .ev-bar i { position: absolute; top: 1px; height: 10px; transition: width 150ms ease; }
 .ev-bar i.pos { left: 50%; background: var(--spam); }
 .ev-bar i.neg { right: 50%; background: var(--ham); }
-.ev-row .n { text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; }
+.ev-row .n { text-align: right; font-variant-numeric: tabular-nums; font-weight: 700; }
 .ev-row .n.pos { color: var(--spam); } .ev-row .n.neg { color: var(--ham); }
 .empty { color: var(--muted-fg); font-size: var(--t-sm); }
 details { border-top: 2px solid var(--ink); padding-top: var(--s2); }
-summary { cursor: pointer; font-size: var(--t-sm); font-weight: 600; min-height: 44px; display: flex; align-items: center; gap: var(--s2); text-transform: uppercase; letter-spacing: .04em; }
+summary { cursor: pointer; font-size: var(--t-sm); font-weight: 700; min-height: 44px; display: flex; align-items: center; gap: var(--s2); }
 summary svg { width: 14px; height: 14px; transition: transform 100ms ease; }
 details[open] summary svg { transform: rotate(90deg); }
-.math { font-family: var(--font-mono); font-size: var(--t-xs); line-height: 1.9; margin-top: var(--s2); color: var(--muted-fg); overflow-x: auto; }
-.math b { color: var(--fg); font-weight: 600; }
+.math { font-size: var(--t-xs); line-height: 1.9; margin-top: var(--s2); color: var(--muted-fg); overflow-x: auto; }
+.math b { color: var(--fg); font-weight: 700; }
 
-/* Evaluation */
-.eval { margin-top: var(--s6); padding: var(--s4); }
+.eval { margin-top: var(--s8); }
 .eval p { margin: 0 0 var(--s3); color: var(--muted-fg); font-size: var(--t-sm); max-width: 70ch; }
 .tbl { overflow-x: auto; }
-table { border-collapse: collapse; width: 100%; font-family: var(--font-mono); font-size: var(--t-sm); font-variant-numeric: tabular-nums; }
-th, td { padding: 9px 12px; text-align: right; border-bottom: 1px solid var(--line); white-space: nowrap; }
-th:first-child, td:first-child { text-align: left; font-family: var(--font-ui); font-size: var(--t-base); }
-th { font-weight: 600; color: var(--muted-fg); font-size: var(--t-xs); letter-spacing: .06em; text-transform: uppercase; border-bottom: 2px solid var(--ink); }
-tr.ship td { background: var(--ham-soft); font-weight: 600; }
-tr.ship td:first-child::after { content: "← this page"; font-family: var(--font-mono); font-size: var(--t-xs); color: var(--ham); margin-left: 10px; font-weight: 600; }
+table { border-collapse: collapse; width: 100%; font-size: var(--t-sm); font-variant-numeric: tabular-nums; }
+th, td { padding: 9px 12px; text-align: right; white-space: nowrap; }
+th:first-child, td:first-child { text-align: left; }
+th { font-weight: 400; color: var(--muted-fg); border-bottom: 2px solid var(--ink); }
+tbody tr + tr td { border-top: 1px solid var(--line); }
+tr.ship td { background: var(--ham-soft); font-weight: 700; }
+tr.ship td:first-child::after { content: "shipped"; font-size: var(--t-xs); color: var(--ham); margin-left: 10px; }
 tr.base td { color: var(--muted-fg); }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; } .btn:hover, .btn:active { transform: none; } }
 </style>
@@ -170,14 +147,11 @@ tr.base td { color: var(--muted-fg); }
 <div class="wrap">
   <header class="top">
     <div>
-      <h1>Spamfilter Live</h1>
+      <p class="repo"><a href="https://github.com/evannwilsonn/spamfilter">evannwilsonn/spamfilter</a></p>
+      <h1>Spamfilter</h1>
       <p class="sub">Multinomial naive Bayes written from scratch in Rust, trained on 5,574 SMS, ported to JS. It runs in this tab; nothing leaves your browser.</p>
     </div>
-    <div class="facts" aria-label="Model facts">
-      <span>vocab <b id="s-vocab">–</b></span>
-      <span>prior P(spam) <b id="s-prior">–</b></span>
-      <span>α <b>1.0</b></span>
-    </div>
+    <p class="facts" aria-label="Model facts"><b id="s-vocab">–</b> tokens in vocabulary<br>prior P(spam) <b id="s-prior">–</b>, α = <b>1.0</b></p>
   </header>
 
   <div class="grid">
@@ -185,8 +159,8 @@ tr.base td { color: var(--muted-fg); }
       <div class="panel-head"><b>Messages</b><span id="count" role="status" aria-atomic="true">0 classified</span></div>
       <div class="msgs" id="msgs"></div>
       <form class="compose" id="form">
-        <label class="vis" for="text">Message to classify · scored on every keystroke · Enter adds it to the thread</label>
-        <textarea id="text" placeholder="Type a text message…"></textarea>
+        <label class="vis" for="text">Scored on every keystroke. Press Enter to add it to the thread.</label>
+        <textarea id="text" placeholder="Type a text message"></textarea>
         <div class="row">
           <button class="btn primary" type="submit" id="send">Classify</button>
           <button class="btn" type="button" id="try-spam">Try a spam</button>
@@ -198,11 +172,10 @@ tr.base td { color: var(--muted-fg); }
 
     <section class="panel why" aria-label="Why the model decided this">
       <div class="hero" role="status" aria-atomic="true">
-        <h2>Verdict</h2>
         <div class="label" id="v-label">—</div>
         <div class="p" id="v-p">type something</div>
         <div class="meter" aria-hidden="true"><div class="fill" id="fill"></div><div class="thr" id="thr-mark"></div></div>
-        <div class="meter-lbl" aria-hidden="true"><span>0 · certain ham</span><span>P(spam)</span><span>1 · certain spam</span></div>
+        <div class="meter-lbl" aria-hidden="true"><span>0, certain ham</span><span>1, certain spam</span></div>
       </div>
       <div>
         <h2>Spam threshold</h2>
@@ -214,10 +187,10 @@ tr.base td { color: var(--muted-fg); }
         <p class="hint" id="thr-hint">The model needs P(spam) above this to call spam. Higher means fewer real texts lost and more spam let through.</p>
       </div>
       <div>
-        <h2>Evidence · log-odds per token</h2>
+        <h2>Evidence by token</h2>
         <div class="ev-key" aria-hidden="true"><span><svg><use href="#i-down"/></svg>toward ham</span><span>toward spam<svg><use href="#i-up"/></svg></span></div>
         <div class="ev" id="ev"></div>
-        <p class="hint">log P(token | spam) − log P(token | ham). Struck-through tokens are not in the vocabulary and are ignored.</p>
+        <p class="hint">Each bar is log P(token given spam) minus log P(token given ham). Struck-through tokens are not in the vocabulary and are ignored.</p>
       </div>
       <details>
         <summary><svg aria-hidden="true"><use href="#i-chev"/></svg>Show the arithmetic</summary>
@@ -226,15 +199,15 @@ tr.base td { color: var(--muted-fg); }
     </section>
   </div>
 
-  <section class="panel eval" aria-label="Evaluation">
+  <section class="eval" aria-label="Evaluation">
     <h2>How it was measured</h2>
     <p>Stratified 80/20 split, averaged over 10 random seeds. Spam is the positive class. The from-scratch model matches linfa's MultinomialNb to the confusion cell.</p>
     <div class="tbl"><table>
       <thead><tr><th scope="col">Model</th><th scope="col">Accuracy</th><th scope="col">Precision</th><th scope="col">Recall</th><th scope="col">F1</th><th scope="col">F1 sd</th></tr></thead>
       <tbody>
-        <tr class="base"><td>Majority baseline (always ham)</td><td>0.866</td><td>0.000</td><td>0.000</td><td>0.000</td><td>0.000</td></tr>
+        <tr class="base"><td>Majority baseline, always ham</td><td>0.866</td><td>0.000</td><td>0.000</td><td>0.000</td><td>0.000</td></tr>
         <tr><td>Naive Bayes, unigrams</td><td>0.985</td><td>0.948</td><td>0.942</td><td>0.945</td><td>0.014</td></tr>
-        <tr><td>Naive Bayes, unigrams + bigrams</td><td>0.987</td><td>0.966</td><td>0.938</td><td>0.952</td><td>0.016</td></tr>
+        <tr><td>Naive Bayes, unigrams and bigrams</td><td>0.987</td><td>0.966</td><td>0.938</td><td>0.952</td><td>0.016</td></tr>
         <tr class="ship"><td>Bigrams, threshold 0.90</td><td>0.988</td><td>0.981</td><td>0.931</td><td>0.955</td><td>0.014</td></tr>
         <tr><td>Bigrams, threshold 0.99</td><td>0.989</td><td>0.992</td><td>0.923</td><td>0.956</td><td>0.015</td></tr>
       </tbody>
@@ -328,7 +301,7 @@ tr.base td { color: var(--muted-fg); }
       const spam = m.res.p > threshold, cls = spam ? 'spam' : 'ham';
       return `<div class="msg${i === activeIdx ? ' active' : ''}"><button type="button" data-i="${i}" aria-label="Show reasoning for message ${i + 1}, ${cls}">` +
         `<div class="bubble">${esc(m.text)}</div>` +
-        `<span class="verdict ${cls}">${ICON[cls]}${cls} · ${m.res.p.toFixed(3)}</span>` +
+        `<span class="verdict ${cls}">${ICON[cls]}${cls} ${m.res.p.toFixed(3)}</span>` +
         `</button></div>`;
     }).join('');
     $('count').textContent = msgs.length + ' classified';
